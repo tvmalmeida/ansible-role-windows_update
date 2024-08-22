@@ -1,0 +1,9 @@
+---
+extends: default
+
+rules:
+  # 180 chars should be enough, but don't fail if a line is longer
+  line-length:
+    # same max number of ansiblelint
+    max: 180
+    level: warning
