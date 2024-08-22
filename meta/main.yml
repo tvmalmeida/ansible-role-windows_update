@@ -1,18 +1,20 @@
+---
 galaxy_info:
-  author: Pawan Sawalani
+  role_name: windows_update
+  namespace: tvmalmeida
+  author: Thiago V Melo Almeida
   description: Install Windows Updates.
   license: BSD
 
-  min_ansible_version: 2.0
+  min_ansible_version: "2.0"
   platforms:
-  - name: Windows
-    versions:
-     - all
+    - name: Windows
+      versions:
+        - all
 
   galaxy_tags:
-  - windows
-  - security
-  - patching
-
+    - windows
+    - security
+    - patching
 
 dependencies: []
