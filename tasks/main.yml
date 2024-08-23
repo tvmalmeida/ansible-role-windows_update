@@ -7,17 +7,16 @@
       $RebootRequired = $RebootPending `
       -or (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired") `
       -or (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootPending")
+      $Ansible.Result = $false
       if ($RebootRequired) {
-          Write-Output "YES"
-      } else {
-          Write-Output "NO"
+          $Ansible.Result = $true
       }
   register: reboot_needed
 
 - name: Reboot host before check for update
   ansible.windows.win_reboot:
-    reboot_timeout_sec: 3600
-  when: reboot_needed.output is defined and "YES" in reboot_needed.output
+    reboot_timeout_sec: 1800
+  when: reboot_needed.result
 
 # Check for missing updates
 - name: Check for missing updates
@@ -41,5 +40,5 @@
 # Reboot operational system
 - name: Reboot host after installing updates.
   ansible.windows.win_reboot:
-    reboot_timeout_sec: 3600
+    reboot_timeout_sec: 1800
   when: update_result.reboot_required
