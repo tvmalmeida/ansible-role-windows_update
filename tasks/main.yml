@@ -1,28 +1,44 @@
 ---
+# Reboot if required before installing new updates
+- name: Check if reboot is needed
+  ansible.windows.win_powershell:
+    script: |
+      $RebootPending = Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending"
+      $RebootRequired = $RebootPending `
+      -or (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired") `
+      -or (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootPending")
+      $Ansible.Result = $false
+      if ($RebootRequired) {
+          $Ansible.Result = $true
+      }
+  register: reboot_needed
 
-#Reboot if required before installing new updates
-- name: If reboot required before checking and installing new updates, reboot the host.
-  win_reboot:
-   reboot_timeout_sec: 1500
-  when: ansible_reboot_pending
+- name: Reboot host before check for update
+  ansible.windows.win_reboot:
+    reboot_timeout_sec: 1800
+  when: reboot_needed.result
 
-#Check for missing updates
-- name: Check for missing updates.
-  win_updates: state=searched
+# Check for missing updates
+- name: Check for missing updates
+  ansible.windows.win_updates:
+    category_names: "{{ update_category_names }}"
+    state: searched
   register: update_count
 
-#List the missing updates
-- name: List the updates.
-  debug: var=update_count
+# List the missing updates
+- name: List the updates
+  ansible.builtin.debug:
+    msg: "{{ update_count }}"
 
-#Install Updates
+# Install Updates
 - name: Install all Critical and security updates.
-  win_updates:
-    category_names: "{{update_category_names}}"
+  ansible.windows.win_updates:
+    category_names: "{{ update_category_names }}"
     state: installed
   register: update_result
 
+# Reboot operational system
 - name: Reboot host after installing updates.
-  win_reboot:
-    reboot_timeout_sec: 1500
+  ansible.windows.win_reboot:
+    reboot_timeout_sec: 1800
   when: update_result.reboot_required
